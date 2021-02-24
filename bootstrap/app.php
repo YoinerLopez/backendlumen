@@ -76,9 +76,9 @@ $app->configure('app');
 //     App\Http\Middleware\ExampleMiddleware::class
 // ]);
 
-// $app->routeMiddleware([
-//     'auth' => App\Http\Middleware\Authenticate::class,
-// ]);
+$app->routeMiddleware([
+     'auth' => App\Http\Middleware\Authenticate::class,
+]);
 
 /*
 |--------------------------------------------------------------------------
@@ -92,9 +92,15 @@ $app->configure('app');
 */
 
 // $app->register(App\Providers\AppServiceProvider::class);
-// $app->register(App\Providers\AuthServiceProvider::class);
+$app->register(App\Providers\AuthServiceProvider::class);
 // $app->register(App\Providers\EventServiceProvider::class);
-
+/** Se agrego cors para poder utilizar la aplicacion desde frontend */
+$app->register(Fruitcake\Cors\CorsServiceProvider::class);
+$app->configure('cors');
+$app->middleware([
+    // ...
+    Fruitcake\Cors\HandleCors::class,
+]);
 /*
 |--------------------------------------------------------------------------
 | Load The Application Routes

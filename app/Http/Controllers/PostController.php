@@ -42,7 +42,7 @@ class PostController extends Controller
         if($request->has('image')){
             $input['image']= $this->loadImage($request->image);
         }
-       
+       $input['user_id']= auth()->user()->id;
        Post::create($input);
        
         return response()->json([
@@ -60,22 +60,34 @@ class PostController extends Controller
    public function update($id,Request $request)
    {   
        //validation
-       $this->validation($request,$id);
-       //unique:tabla,columna
-       
-        $input = $request->all();
-        if($request->has('image')){
-            $input['image']= $this->loadImage($request->image);
-        }
        $post = Post::find($id);
-       $postimg= $post->image;
-       $resp = $this->deleteImage(base_path('public/img/').$post->image);
-       $post->update($input);
-       
-        return response()->json([
-           'res'    => true,
-           'message'=> 'Update correct'.$postimg.' la respuesta '.$resp
-        ]);
+       $validation = $this->uservalidation($post);
+       if ($validation) {
+           
+        $this->validation($request,$id);
+        //unique:tabla,columna
+        
+            $input = $request->all();
+            if($request->has('image')){
+                $input['image']= $this->loadImage($request->image);
+            }
+        $post = Post::find($id);
+        $postimg= $post->image;
+        $resp = $this->deleteImage(base_path('public/img/').$post->image);
+        $post->update($input);
+        
+            return response()->json([
+            'res'    => true,
+            'message'=> 'Update correct'
+            ]);
+        
+        }
+        else{
+            return response()->json([
+                'res'    => false,
+                'message'=> 'Update incorrect, the user is incorrect'
+                ]);
+        }
   }
 
    /**
@@ -86,19 +98,25 @@ class PostController extends Controller
     */
    public function destroy($id)
    {
-        Post::destroy($id);
-        return response()->json([
-            'res'    => true,
-            'message'=> 'Delete correct'
-         ]);  
+        $validation =  $this->uservalidation(Post::find($id));
+        if($validation){
+            Post::destroy($id);
+            return response()->json([
+                'res'    => true,
+                'message'=> 'Delete correct'
+            ]);  
+        }else{
+            return response()->json([
+                'res'    => false,
+                'message'=> 'Delete incorrect, user incorrect'
+            ]); 
+        }
    }
    private function validation($request,$id =null){
-        $ruleUpdate = is_null($id) ? '' : ',' . $id;    
-        
+        $ruleUpdate = is_null($id) ? '' : ',' . $id;            
         $this->validate($request,[
             'title'     =>'required|min:3',   
-            'image'      =>'unique:posts,image'.$ruleUpdate,
-            'user_id'   =>'required'
+            'image'      =>'unique:posts,image'.$ruleUpdate
         ]);
    }
    private function loadImage($image)
@@ -112,5 +130,8 @@ class PostController extends Controller
         File::delete($filename);
         return $filename;
                 
+    }
+    private function uservalidation($post){
+       return $post->id === auth()->user()->id ? true : false;
     }
 }

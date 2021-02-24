@@ -14,10 +14,18 @@
 */
 
 $router->get('/', function () use ($router) {
-    return $router->app->version();
+    return 'Api de prueba'.$router->app->version();
 });
-Route::post('api/posts', 'PostController@store');
-Route::get('api/posts','PostController@index');
+$router->post('register', 'UserController@store');
+$router->post('login', 'UserController@login');
 Route::get('api/posts/{id}', 'PostController@show');
-Route::put('api/posts/{id}', 'PostController@update');
-Route::delete('api/posts/{id}', 'PostController@destroy');
+Route::get('api/posts','PostController@index');
+$router->group(['middleware' => 'auth'], function () use ($router) {
+    Route::post('api/posts', 'PostController@store');
+    Route::put('api/posts/{id}', 'PostController@update');
+    Route::delete('api/posts/{id}', 'PostController@destroy');
+    $router->post('logout', 'UserController@logout');
+    $router->get('user', function () use ($router) {
+        return auth()->user();
+    });
+});
